@@ -10,6 +10,7 @@ export function PWAInstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
+  const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
     // Check if app is already installed
@@ -25,6 +26,8 @@ export function PWAInstallButton() {
     };
 
     const handleAppInstalled = () => {
+      console.log('✅ App installed successfully');
+      setIsInstalling(false);
       setShowInstallButton(false);
       setIsInstalled(true);
       setDeferredPrompt(null);
@@ -42,19 +45,46 @@ export function PWAInstallButton() {
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
-    deferredPrompt.prompt();
+    try {
+      setIsInstalling(true);
+      await deferredPrompt.prompt();
 
-    const { outcome } = await deferredPrompt.userChoice;
+      const { outcome } = await deferredPrompt.userChoice;
 
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-    } else {
-      console.log('User dismissed the install prompt');
+      if (outcome === 'accepted') {
+        console.log('✅ User accepted the install prompt');
+        // Wait a bit for the appinstalled event
+        setTimeout(() => {
+          // If appinstalled event didn't fire, mark as installed anyway
+          if (!isInstalled) {
+            setIsInstalled(true);
+            setIsInstalling(false);
+          }
+        }, 3000);
+      } else {
+        console.log('❌ User dismissed the install prompt');
+        setIsInstalling(false);
+        setShowInstallButton(true);
+      }
+
+      setDeferredPrompt(null);
+    } catch (error) {
+      console.error('Error during installation:', error);
+      setIsInstalling(false);
+      setShowInstallButton(true);
     }
-
-    setDeferredPrompt(null);
-    setShowInstallButton(false);
   };
+
+  if (isInstalling) {
+    return (
+      <Alert variant="info" className="mb-0 d-inline-flex align-items-center">
+        <div className="spinner-border spinner-border-sm me-2" role="status">
+          <span className="visually-hidden">Instalando...</span>
+        </div>
+        <span>Instalando MandaFácil...</span>
+      </Alert>
+    );
+  }
 
   if (isInstalled) {
     return (
