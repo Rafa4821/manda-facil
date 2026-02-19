@@ -24,7 +24,7 @@ export function Navbar() {
           <img 
             src="/logo.png" 
             alt="MandaFácil" 
-            height="40"
+            height="30"
             className="d-inline-block align-top"
           />
         </BSNavbar.Brand>
