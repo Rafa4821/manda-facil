@@ -55,8 +55,8 @@ export function RegisterPage() {
             <span style={{ fontSize: '1.2rem' }}>←</span>
             <span className="ms-2">Volver al inicio</span>
           </Button>
-          <div className="text-center mb-4">
-            <img src="/logo.png" alt="MandaFácil" style={{ height: '80px', marginBottom: '1rem' }} />
+          <div className="text-center mb-3">
+            <img src="/logo.png" alt="MandaFácil" style={{ height: '50px', width: 'auto' }} />
           </div>
           <h3 className="text-center mb-4">Crear Cuenta</h3>
           {error && <Alert variant="danger">{error}</Alert>}

@@ -26,8 +26,8 @@ export function HomePage() {
   return (
     <div className="landing-page">
       {/* Logo Header */}
-      <div className="position-absolute top-0 start-0 p-4" style={{ zIndex: 10 }}>
-        <img src="/logo.png" alt="MandaFácil" style={{ height: '60px' }} />
+      <div className="position-absolute top-0 start-0 p-3" style={{ zIndex: 10 }}>
+        <img src="/logo.png" alt="MandaFácil" style={{ height: '40px', width: 'auto' }} />
       </div>
 
       {/* Hero Section */}
