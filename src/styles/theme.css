@@ -1,0 +1,100 @@
+/* MandaFácil Theme Colors - Based on Logo */
+
+:root {
+  /* Primary Colors from Logo */
+  --primary-color: #FF6B35;      /* Naranja/Coral principal */
+  --primary-dark: #E85A2A;       /* Naranja oscuro */
+  --primary-light: #FF8558;      /* Naranja claro */
+  
+  /* Secondary Colors */
+  --secondary-color: #FFD93D;    /* Amarillo dorado */
+  --secondary-dark: #F4C430;     /* Amarillo oscuro */
+  
+  /* Accent Colors */
+  --accent-blue: #4A90E2;        /* Azul complementario */
+  --accent-green: #6BCF7F;       /* Verde para éxito */
+  
+  /* Neutral Colors */
+  --dark-bg: #2C3E50;            /* Gris oscuro para navbar */
+  --light-bg: #F8F9FA;           /* Fondo claro */
+  --text-dark: #2C3E50;
+  --text-muted: #6C757D;
+  
+  /* Bootstrap Override */
+  --bs-primary: #FF6B35;
+  --bs-primary-rgb: 255, 107, 53;
+  --bs-secondary: #FFD93D;
+  --bs-secondary-rgb: 255, 217, 61;
+  --bs-success: #6BCF7F;
+  --bs-info: #4A90E2;
+  --bs-warning: #FFD93D;
+  --bs-danger: #E74C3C;
+  --bs-dark: #2C3E50;
+}
+
+/* Override Bootstrap Primary Button */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+}
+
+.btn-primary:active,
+.btn-primary:focus {
+  background-color: var(--primary-dark);
+  border-color: var(--primary-dark);
+  box-shadow: 0 0 0 0.25rem rgba(255, 107, 53, 0.25);
+}
+
+/* Override Bootstrap Outline Primary */
+.btn-outline-primary {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Link Colors */
+a {
+  color: var(--primary-color);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+/* Card Shadows with Brand Color */
+.shadow-primary {
+  box-shadow: 0 0.5rem 1rem rgba(255, 107, 53, 0.15);
+}
+
+/* Badge Colors */
+.badge-primary {
+  background-color: var(--primary-color);
+}
+
+/* Alert Primary */
+.alert-primary {
+  background-color: rgba(255, 107, 53, 0.1);
+  border-color: var(--primary-color);
+  color: var(--primary-dark);
+}

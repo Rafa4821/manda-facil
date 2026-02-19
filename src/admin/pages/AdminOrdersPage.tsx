@@ -33,6 +33,9 @@ export function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedOrders, setSelectedOrders] = useState<Set<string>>(new Set())
+  const [bulkAction, setBulkAction] = useState('')
+  const [processingBulk, setProcessingBulk] = useState(false)
 
   useEffect(() => {
     loadOrders()
@@ -43,6 +46,7 @@ export function AdminOrdersPage() {
       setLoading(true)
       const allOrders = await orderService.getAllOrders(statusFilter)
       setOrders(allOrders)
+      setSelectedOrders(new Set()) // Clear selection when reloading
     } catch (error: any) {
       if (error.code === 'permission-denied') {
         setError('No tienes permisos para ver los pedidos')
@@ -51,6 +55,65 @@ export function AdminOrdersPage() {
       }
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedOrders(new Set(orders.map(o => o.id)))
+    } else {
+      setSelectedOrders(new Set())
+    }
+  }
+
+  const handleSelectOrder = (orderId: string, checked: boolean) => {
+    const newSelection = new Set(selectedOrders)
+    if (checked) {
+      newSelection.add(orderId)
+    } else {
+      newSelection.delete(orderId)
+    }
+    setSelectedOrders(newSelection)
+  }
+
+  const handleBulkAction = async () => {
+    if (selectedOrders.size === 0 || !bulkAction) return
+
+    const confirmed = window.confirm(
+      `¿Estás seguro de ${bulkAction === 'delete' ? 'eliminar' : 'cambiar el estado de'} ${selectedOrders.size} pedido(s)?`
+    )
+    if (!confirmed) return
+
+    try {
+      setProcessingBulk(true)
+      const orderIds = Array.from(selectedOrders)
+
+      if (bulkAction === 'delete') {
+        const result = await orderService.bulkDeleteOrders(orderIds)
+        if (result.success > 0) {
+          setError('')
+          alert(`✅ ${result.success} pedido(s) eliminado(s) correctamente`)
+          await loadOrders()
+        }
+        if (result.failed > 0) {
+          setError(`⚠️ ${result.failed} pedido(s) no pudieron ser eliminados`)
+        }
+      } else {
+        // Bulk status update
+        const result = await orderService.bulkUpdateStatus(orderIds, bulkAction)
+        if (result.success > 0) {
+          setError('')
+          alert(`✅ ${result.success} pedido(s) actualizados correctamente`)
+          await loadOrders()
+        }
+      }
+
+      setBulkAction('')
+    } catch (error: any) {
+      setError('Error al procesar la acción en lote')
+      console.error('Bulk action error:', error)
+    } finally {
+      setProcessingBulk(false)
     }
   }
 
@@ -142,7 +205,31 @@ export function AdminOrdersPage() {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={9} className="text-end">
+            <Col md={9} className="text-end d-flex gap-2 justify-content-end align-items-end">
+              {selectedOrders.size > 0 && (
+                <>
+                  <Form.Select 
+                    value={bulkAction} 
+                    onChange={(e) => setBulkAction(e.target.value)}
+                    style={{ width: 'auto' }}
+                  >
+                    <option value="">Acciones en lote ({selectedOrders.size})</option>
+                    <option value="delete">🗑️ Eliminar</option>
+                    <option value="clp_verified">✅ Marcar como CLP Verificado</option>
+                    <option value="processing">⚙️ Marcar como Procesando</option>
+                    <option value="paid_out">💸 Marcar como VES Pagado</option>
+                    <option value="completed">✔️ Marcar como Completado</option>
+                    <option value="cancelled">❌ Marcar como Cancelado</option>
+                  </Form.Select>
+                  <Button 
+                    variant="primary" 
+                    onClick={handleBulkAction}
+                    disabled={!bulkAction || processingBulk}
+                  >
+                    {processingBulk ? 'Procesando...' : 'Aplicar'}
+                  </Button>
+                </>
+              )}
               <Button variant="outline-secondary" onClick={loadOrders}>
                 🔄 Actualizar
               </Button>
@@ -171,6 +258,13 @@ export function AdminOrdersPage() {
               <Table responsive hover className="desktop-table-view">
                 <thead>
                   <tr>
+                    <th>
+                      <Form.Check
+                        type="checkbox"
+                        checked={selectedOrders.size === orders.length && orders.length > 0}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                    </th>
                     <th>N° Pedido</th>
                     <th>Cliente</th>
                     <th>CLP</th>
@@ -185,29 +279,53 @@ export function AdminOrdersPage() {
                   {orders.map((order) => (
                     <tr 
                       key={order.id}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      className={selectedOrders.has(order.id) ? 'table-active' : ''}
                     >
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
+                        <Form.Check
+                          type="checkbox"
+                          checked={selectedOrders.has(order.id)}
+                          onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
+                        />
+                      </td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         <strong>{order.orderNumber}</strong>
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         <div>{order.customerName}</div>
                         <small className="text-muted">{order.customerEmail}</small>
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         {order.amountClp?.toLocaleString('es-CL') || '0'} CLP
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         {order.amountVesExpected?.toLocaleString('es-VE', {
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2
                         }) || '0.00'} VES
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         {getStatusBadge(order.status)}
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         {order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-CL', {
                           day: '2-digit',
                           month: 'short',
@@ -215,14 +333,17 @@ export function AdminOrdersPage() {
                           minute: '2-digit'
                         }) : 'N/A'}
                       </td>
-                      <td>
+                      <td
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
+                      >
                         {order.clpReceiptUrl ? (
                           <Badge bg="success">✓ CLP</Badge>
                         ) : (
                           <Badge bg="secondary">Pendiente</Badge>
                         )}
                       </td>
-                      <td>
+                      <td onClick={(e) => e.stopPropagation()}>
                         <Button 
                           variant="outline-primary" 
                           size="sm"
@@ -244,10 +365,15 @@ export function AdminOrdersPage() {
                 {orders.map((order) => (
                   <div 
                     key={order.id}
-                    className="order-card-mobile"
-                    onClick={() => navigate(`/admin/orders/${order.id}`)}
+                    className={`order-card-mobile ${selectedOrders.has(order.id) ? 'selected' : ''}`}
                   >
                     <div className="order-card-header">
+                      <Form.Check
+                        type="checkbox"
+                        checked={selectedOrders.has(order.id)}
+                        onChange={(e) => handleSelectOrder(order.id, e.target.checked)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                       <div>
                         <strong className="d-block">{order.orderNumber}</strong>
                         <small className="text-muted d-block">{order.customerName}</small>
@@ -302,10 +428,7 @@ export function AdminOrdersPage() {
                       <Button 
                         variant="outline-primary" 
                         size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          navigate(`/admin/orders/${order.id}`)
-                        }}
+                        onClick={() => navigate(`/admin/orders/${order.id}`)}
                       >
                         Ver Detalle →
                       </Button>

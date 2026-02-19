@@ -21,7 +21,12 @@ export function Navbar() {
     <BSNavbar bg="dark" variant="dark" expand="lg" className="mb-4">
       <Container>
         <BSNavbar.Brand as={Link} to={isAdmin ? '/admin' : '/app'}>
-          <strong>Mandafácil</strong>
+          <img 
+            src="/logo.png" 
+            alt="MandaFácil" 
+            height="40"
+            className="d-inline-block align-top"
+          />
         </BSNavbar.Brand>
         <BSNavbar.Toggle aria-controls="basic-navbar-nav" />
         <BSNavbar.Collapse id="basic-navbar-nav">

@@ -6,7 +6,8 @@
 
 /* Hero Section */
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  background: linear-gradient(135deg, #FF6B35 0%, #FFD93D 100%);
   color: white;
   position: relative;
   overflow: hidden;

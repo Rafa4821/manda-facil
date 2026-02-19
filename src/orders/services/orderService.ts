@@ -8,9 +8,12 @@ import {
   where, 
   orderBy,
   setDoc,
-  Timestamp 
+  deleteDoc,
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore'
-import { db } from '../../app/firebase/firebase'
+import { ref, deleteObject } from 'firebase/storage'
+import { db, storage } from '../../app/firebase/firebase'
 import { Order, CreateOrderData } from '../types/order'
 import { rateService } from '../../rates/services/rateService'
 
@@ -21,6 +24,28 @@ const toDate = (value: any): Date | undefined => {
   if (value?.toDate && typeof value.toDate === 'function') return value.toDate();
   if (value?.seconds) return new Date(value.seconds * 1000);
   return undefined;
+}
+
+// Helper to delete image from Firebase Storage
+const deleteImageFromStorage = async (imageUrl: string): Promise<void> => {
+  try {
+    if (!imageUrl) return;
+    
+    // Extract path from Firebase Storage URL
+    // URL format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media
+    const urlMatch = imageUrl.match(/\/o\/(.+?)\?/);
+    if (urlMatch && urlMatch[1]) {
+      const imagePath = decodeURIComponent(urlMatch[1]);
+      const imageRef = ref(storage, imagePath);
+      await deleteObject(imageRef);
+      console.log('✅ Deleted image:', imagePath);
+    }
+  } catch (error: any) {
+    // Ignore if file doesn't exist
+    if (error.code !== 'storage/object-not-found') {
+      console.error('Error deleting image:', error);
+    }
+  }
 }
 
 export const orderService = {
@@ -257,5 +282,77 @@ export const orderService = {
       console.error('Error fetching all orders:', error)
       throw error
     }
+  },
+
+  // Delete order and all associated images
+  deleteOrder: async (orderId: string): Promise<void> => {
+    try {
+      // First, get the order to retrieve image URLs
+      const order = await orderService.getOrderById(orderId);
+      if (!order) {
+        throw new Error('Pedido no encontrado');
+      }
+
+      // Delete images from Storage
+      if (order.clpReceiptUrl) {
+        await deleteImageFromStorage(order.clpReceiptUrl);
+      }
+      if (order.vesReceiptUrl) {
+        await deleteImageFromStorage(order.vesReceiptUrl);
+      }
+
+      // Delete order document
+      const orderRef = doc(db, 'orders', orderId);
+      await deleteDoc(orderRef);
+      
+      console.log('✅ Deleted order:', orderId);
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      throw error;
+    }
+  },
+
+  // Bulk delete orders
+  bulkDeleteOrders: async (orderIds: string[]): Promise<{ success: number; failed: number }> => {
+    let success = 0;
+    let failed = 0;
+
+    for (const orderId of orderIds) {
+      try {
+        await orderService.deleteOrder(orderId);
+        success++;
+      } catch (error) {
+        console.error(`Failed to delete order ${orderId}:`, error);
+        failed++;
+      }
+    }
+
+    return { success, failed };
+  },
+
+  // Bulk update order status
+  bulkUpdateStatus: async (orderIds: string[], newStatus: string): Promise<{ success: number; failed: number }> => {
+    const batch = writeBatch(db);
+    let success = 0;
+    let failed = 0;
+
+    try {
+      for (const orderId of orderIds) {
+        const orderRef = doc(db, 'orders', orderId);
+        batch.update(orderRef, {
+          status: newStatus,
+          updatedAt: Timestamp.now(),
+        });
+      }
+
+      await batch.commit();
+      success = orderIds.length;
+    } catch (error) {
+      console.error('Error bulk updating orders:', error);
+      failed = orderIds.length;
+      throw error;
+    }
+
+    return { success, failed };
   },
 }

@@ -1,8 +1,65 @@
+import { useState, useEffect } from 'react'
 import { Card, Row, Col, Badge } from 'react-bootstrap'
 import { useAuth } from '../../auth/context/AuthContext'
+import { orderService } from '../../orders/services/orderService'
+import { rateService } from '../../rates/services/rateService'
 
 export function AdminHomePage() {
   const { userProfile } = useAuth()
+  const [pendingCount, setPendingCount] = useState(0)
+  const [completedToday, setCompletedToday] = useState(0)
+  const [currentRate, setCurrentRate] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true)
+      
+      // Fetch all orders
+      const orders = await orderService.getAllOrders()
+      
+      // Count pending orders
+      const pending = orders.filter(o => 
+        o.status === 'created' || o.status === 'clp_receipt_uploaded'
+      ).length
+      setPendingCount(pending)
+      
+      // Count completed today
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      const completed = orders.filter(o => {
+        if (o.status !== 'completed' || !o.completedAt) return false
+        const completedDate = new Date(o.completedAt)
+        completedDate.setHours(0, 0, 0, 0)
+        return completedDate.getTime() === today.getTime()
+      }).length
+      setCompletedToday(completed)
+      
+      // Fetch current rate
+      const rate = await rateService.getCurrentRate()
+      if (rate) {
+        setCurrentRate(rate.clpToVes)
+      }
+    } catch (error) {
+      console.error('Error loading dashboard data:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-5">
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Cargando...</span>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -27,7 +84,7 @@ export function AdminHomePage() {
             <Card.Body>
               <Card.Title>Pedidos Pendientes</Card.Title>
               <h3 className="text-primary mb-0">
-                <Badge bg="warning" text="dark">5</Badge>
+                <Badge bg="warning" text="dark">{pendingCount}</Badge>
               </h3>
             </Card.Body>
           </Card>
@@ -37,7 +94,7 @@ export function AdminHomePage() {
             <Card.Body>
               <Card.Title>Completados Hoy</Card.Title>
               <h3 className="text-success mb-0">
-                <Badge bg="success">12</Badge>
+                <Badge bg="success">{completedToday}</Badge>
               </h3>
             </Card.Body>
           </Card>
@@ -46,7 +103,9 @@ export function AdminHomePage() {
           <Card className="shadow-sm">
             <Card.Body>
               <Card.Title>Tasa Actual</Card.Title>
-              <h3 className="text-info mb-0">36.50 Bs</h3>
+              <h3 className="text-info mb-0">
+                {currentRate ? `${currentRate.toFixed(4)} Bs` : 'No configurada'}
+              </h3>
             </Card.Body>
           </Card>
         </Col>

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Card, Form, Button, Alert } from 'react-bootstrap'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 export function LoginPage() {
@@ -9,6 +9,7 @@ export function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
+  const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,6 +37,17 @@ export function LoginPage() {
     <div className="d-flex justify-content-center">
       <Card style={{ maxWidth: '400px', width: '100%' }} className="shadow-sm">
         <Card.Body className="p-4">
+          <Button
+            variant="link"
+            className="text-muted p-0 mb-3 text-decoration-none d-flex align-items-center"
+            onClick={() => navigate('/')}
+          >
+            <span style={{ fontSize: '1.2rem' }}>←</span>
+            <span className="ms-2">Volver al inicio</span>
+          </Button>
+          <div className="text-center mb-4">
+            <img src="/logo.png" alt="MandaFácil" style={{ height: '80px', marginBottom: '1rem' }} />
+          </div>
           <h3 className="text-center mb-4">Iniciar Sesión</h3>
           {error && <Alert variant="danger">{error}</Alert>}
           <Form onSubmit={handleSubmit}>
