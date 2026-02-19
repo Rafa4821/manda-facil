@@ -1,0 +1,1 @@
+export { RateManagementPage } from './RateManagementPage'

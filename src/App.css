@@ -1,0 +1,9 @@
+#root {
+  min-height: 100vh;
+}
+
+.app-layout,
+.admin-layout {
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}

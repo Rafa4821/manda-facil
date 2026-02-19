@@ -1,0 +1,4 @@
+export { CustomerHomePage } from './CustomerHomePage'
+export { NewOrderPage } from './NewOrderPage'
+export { MyOrdersPage } from './MyOrdersPage'
+export { OrderDetailPage } from './OrderDetailPage'

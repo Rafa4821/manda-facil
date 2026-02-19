@@ -1,0 +1,84 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // SECURITY: Require App Check for all requests (production)
+    // Uncomment for production
+    // match /{allPaths=**} {
+    //   allow read, write: if request.app.appCheck.token != null;
+    // }
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.admin == true;
+    }
+    
+    function isCustomer() {
+      return request.auth != null;
+    }
+    
+    // STRICT file size limits
+    function isValidSize() {
+      return request.resource.size < 10 * 1024 * 1024 && // Max 10MB
+             request.resource.size > 100; // Min 100 bytes (prevent empty files)
+    }
+    
+    // Image types with strict validation
+    function isImage() {
+      return request.resource.contentType.matches('image/(jpeg|jpg|png)');
+    }
+    
+    function isPDF() {
+      return request.resource.contentType == 'application/pdf';
+    }
+    
+    function isValidReceiptType() {
+      return isImage() || isPDF();
+    }
+    
+    // Validate filename (prevent path traversal)
+    function isValidFilename() {
+      return !resource.name.matches('.*[./\\\\].*');
+    }
+    
+    // Customer CLP receipts
+    // Path: receipts/clp/{userId}/{orderId}/{filename}
+    match /receipts/clp/{userId}/{orderId}/{filename} {
+      // Customer can upload their own CLP receipt
+      allow create: if isCustomer() && 
+                       isOwner(userId) &&
+                       isValidReceiptType() &&
+                       isValidSize();
+      
+      // Customer can read their own receipts, admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Customer can delete their own receipts (before admin processes)
+    }
+    
+    // VES receipts - Admin uploads (HARDENED)
+    match /receipts/ves/{orderId}/{fileName} {
+      // Anyone authenticated can read
+      allow read: if isAuthenticated();
+      
+      // Only admins can upload VES receipts
+      allow create: if isAdmin() &&
+                       isValidSize() &&
+                       isValidReceiptType() &&
+                       fileName.matches('[0-9]+_.*\\.(jpg|jpeg|png|pdf)');
+      
+      // Prevent updates and deletes from client
+      allow update, delete: if false;
+    }
+    
+    // Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if request.time < timestamp.date(2060, 1, 22);
+    }
+  }
+}

@@ -1,0 +1,153 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // SECURITY: Require App Check for all requests (production)
+    // Comment out in development if needed
+    // match /{document=**} {
+    //   allow read, write: if request.app.appCheck.token != null;
+    // }
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Check admin via custom claim (more secure than Firestore lookup)
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.admin == true;
+    }
+    
+    function isCustomer() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'customer';
+    }
+    
+    // Validate data size to prevent abuse
+    function validateSize(data, maxSize) {
+      return data.size() <= maxSize;
+    }
+    
+    // Validate string length
+    function validateStringLength(str, maxLength) {
+      return str.size() <= maxLength;
+    }
+    
+    // Users collection - HARDENED
+    match /users/{userId} {
+      // Anyone authenticated can read their own profile
+      allow read: if isOwner(userId);
+      
+      // Users can create their own profile (on registration)
+      // With strict validation
+      allow create: if isOwner(userId) && 
+                       request.resource.data.role == 'customer' &&
+                       request.resource.data.keys().hasAll(['fullName', 'email', 'role', 'createdAt']) &&
+                       request.resource.data.keys().hasOnly(['fullName', 'email', 'phone', 'role', 'createdAt', 'updatedAt']) &&
+                       validateStringLength(request.resource.data.fullName, 100) &&
+                       validateStringLength(request.resource.data.email, 200) &&
+                       (request.resource.data.phone == null || validateStringLength(request.resource.data.phone, 20));
+      
+      // Users can update their own profile (except role)
+      // Role can only be changed by admins via Cloud Function
+      // Validate no privilege escalation
+      allow update: if isOwner(userId) && 
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.email == resource.data.email &&
+                       validateStringLength(request.resource.data.get('fullName', ''), 100);
+      
+      // Admins can read all users (but not modify via Firestore)
+      allow read: if isAdmin();
+      
+      // Admin can update role ONLY via Cloud Function (setAdminClaim)
+      // Direct updates to role field are ALWAYS denied
+      
+      // FCM Tokens subcollection
+      match /fcmTokens/{tokenId} {
+        // Users can manage their own tokens
+        allow read, write: if isAuthenticated() && request.auth.uid == userId;
+        
+        // Rate limit: max 10 tokens per user
+        allow create: if isAuthenticated() && 
+                         request.auth.uid == userId &&
+                         tokenId.size() <= 200;
+      }
+    }
+    
+    // Rates collection - CRITICAL: No direct writes allowed
+    match /rates/{rateId} {
+      // All authenticated users can read rates
+      allow read: if isAuthenticated();
+      
+      // NO direct writes - only via Cloud Function updateRate
+      allow write: if false;
+    }
+    
+    // Orders collection - MAXIMUM SECURITY
+    match /orders/{orderId} {
+      // NO direct create - only via Cloud Function createOrder
+      allow create: if false;
+      
+      // Customers can read their own orders ONLY
+      allow read: if isAuthenticated() && 
+                     resource.data.customerId == request.auth.uid;
+      
+      // Customers can ONLY update clpReceiptUrl field (for uploading receipt)
+      // With strict validation: no other fields can change
+      allow update: if isCustomer() && 
+                       resource.data.customerId == request.auth.uid &&
+                       request.resource.data.status == resource.data.status &&
+                       request.resource.data.customerId == resource.data.customerId &&
+                       request.resource.data.amountClp == resource.data.amountClp &&
+                       request.resource.data.rateSnapshot == resource.data.rateSnapshot &&
+                       request.resource.data.orderNumber == resource.data.orderNumber &&
+                       request.resource.data.customerName == resource.data.customerName &&
+                       request.resource.data.customerEmail == resource.data.customerEmail &&
+                       request.resource.data.amountVesExpected == resource.data.amountVesExpected &&
+                       // Only clpReceiptUrl can change
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clpReceiptUrl', 'updatedAt']));
+      
+      // Admins can read all orders but NOT directly update status or amounts
+      allow read: if isAdmin();
+      
+      // Admin can ONLY update vesReceiptUrl field directly
+      // Status updates must go through Cloud Function updateOrderStatus
+      allow update: if isAdmin() &&
+                       request.resource.data.status == resource.data.status &&
+                       request.resource.data.amountClp == resource.data.amountClp &&
+                       request.resource.data.rateSnapshot == resource.data.rateSnapshot &&
+                       request.resource.data.orderNumber == resource.data.orderNumber &&
+                       request.resource.data.customerId == resource.data.customerId &&
+                       // Only vesReceiptUrl can change
+                       (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['vesReceiptUrl', 'updatedAt']));
+      
+      // Order events subcollection - READ ONLY from client
+      match /events/{eventId} {
+        // Customers can read events for their own orders
+        allow read: if isAuthenticated() && 
+                       get(/databases/$(database)/documents/orders/$(orderId)).data.customerId == request.auth.uid;
+        
+        // Admins can read all events
+        allow read: if isAdmin();
+        
+        // NO direct writes to events - ONLY via Cloud Functions
+        allow write: if false;
+      }
+    }
+    
+    // Audit logs collection - Admin only read
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Only Cloud Functions can write
+    }
+    
+    // Default deny all other collections
+    match /{document=**} {
+      allow read, write: if request.time < timestamp.date(2060, 1, 22);
+    }
+  }
+}

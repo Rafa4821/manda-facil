@@ -1,0 +1,236 @@
+/* Additional mobile enhancements */
+
+@media (max-width: 767px) {
+  /* Stack columns on mobile */
+  .row > [class*='col-'] {
+    margin-bottom: 1rem;
+  }
+
+  /* Better card spacing */
+  .card {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Image responsiveness */
+  img,
+  .img-fluid {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Modal improvements */
+  .modal-dialog {
+    margin: 0.5rem !important;
+  }
+
+  .modal-content {
+    border-radius: 1rem !important;
+  }
+
+  /* Badge improvements */
+  .badge {
+    font-size: 0.8rem !important;
+    padding: 0.35rem 0.65rem !important;
+  }
+
+  /* Alert improvements */
+  .alert {
+    font-size: 0.9rem !important;
+    padding: 0.75rem 1rem !important;
+  }
+
+  /* Table improvements when in card view */
+  .table-responsive {
+    border: none !important;
+  }
+
+  /* Navigation improvements */
+  .navbar-brand {
+    font-size: 1.25rem !important;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Dropdown menus */
+  .dropdown-menu {
+    width: 100%;
+    border-radius: 0.5rem !important;
+  }
+
+  .dropdown-item {
+    padding: 0.75rem 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Better spacing for hero sections */
+  .hero-section {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* Improved list groups */
+  .list-group-item {
+    padding: 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  /* Better input group styling */
+  .input-group-text {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* Progress bar */
+  .progress {
+    height: 1.5rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  /* Timeline improvements */
+  .timeline-item {
+    padding-left: 2rem !important;
+  }
+
+  /* Grid improvements */
+  .d-grid {
+    gap: 0.75rem !important;
+  }
+
+  /* Button group stacking */
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .btn-group > .btn {
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Improved spacing utilities */
+  .mb-4 {
+    margin-bottom: 1.5rem !important;
+  }
+
+  .mb-5 {
+    margin-bottom: 2rem !important;
+  }
+
+  .mt-4 {
+    margin-top: 1.5rem !important;
+  }
+
+  .mt-5 {
+    margin-top: 2rem !important;
+  }
+
+  .py-5 {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+
+  /* Safe area support for devices with notch */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Fix for sticky elements on mobile */
+  .sticky-top {
+    position: relative !important;
+  }
+
+  /* Better scrolling */
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  .container,
+  .container-fluid {
+    overflow-x: hidden;
+  }
+
+  /* Touch feedback */
+  button,
+  .btn,
+  a,
+  .clickable {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    user-select: none;
+  }
+
+  /* Smooth scrolling on iOS */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Portrait orientation specific */
+@media (max-width: 767px) and (orientation: portrait) {
+  .hero-section .display-3 {
+    font-size: 2rem !important;
+  }
+
+  .phone-mockup {
+    max-width: 250px;
+  }
+}
+
+/* Landscape orientation specific */
+@media (max-width: 767px) and (orientation: landscape) {
+  .hero-section {
+    min-height: auto !important;
+  }
+
+  .py-5 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  h1, h2 {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 375px) {
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  h1, h2 {
+    font-size: 1.35rem !important;
+  }
+
+  .btn {
+    font-size: 0.875rem !important;
+  }
+
+  .card-body {
+    padding: 1rem !important;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991px) {
+  .container {
+    max-width: 100%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  h1, h2 {
+    font-size: 1.75rem !important;
+  }
+}

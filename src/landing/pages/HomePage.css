@@ -1,0 +1,343 @@
+/* Landing Page Styles */
+
+.landing-page {
+  overflow-x: hidden;
+}
+
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  opacity: 0.3;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Rate Card */
+.rate-card {
+  margin: 2rem 0;
+}
+
+.rate-card .card {
+  background: white;
+  border-radius: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.rate-card .card:hover {
+  transform: translateY(-5px);
+}
+
+.rate-icon {
+  font-size: 3rem;
+  filter: grayscale(0.3);
+}
+
+/* Phone Mockup */
+.hero-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+}
+
+.phone-mockup {
+  width: 300px;
+  height: 600px;
+  background: #1a1a1a;
+  border-radius: 40px;
+  padding: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+}
+
+.status-bar {
+  height: 30px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.app-preview {
+  padding: 20px;
+  height: calc(100% - 30px);
+  overflow: hidden;
+}
+
+.preview-card {
+  background: white;
+  border-radius: 16px;
+  height: 200px;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+/* Benefits Section */
+.benefits-section {
+  background: #f8f9fa;
+}
+
+.benefit-card {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.benefit-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+}
+
+.benefit-icon {
+  font-size: 4rem;
+  line-height: 1;
+  filter: grayscale(0.2);
+}
+
+/* How It Works Section */
+.step-card {
+  padding: 2rem;
+}
+
+.step-number {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes shimmer {
+  to {
+    left: 100%;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fadeIn 0.8s ease-out 0.2s both;
+}
+
+.animate-fade-in-delay-2 {
+  animation: fadeIn 0.8s ease-out 0.4s both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.8s ease-out 0.3s both;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .hero-section {
+    min-height: auto;
+  }
+
+  .phone-mockup {
+    width: 250px;
+    height: 500px;
+  }
+
+  .display-3 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .phone-mockup {
+    width: 200px;
+    height: 400px;
+  }
+
+  .display-3 {
+    font-size: 2rem;
+  }
+
+  .benefit-icon {
+    font-size: 3rem;
+  }
+
+  .step-number {
+    width: 50px;
+    height: 50px;
+    font-size: 1.25rem;
+  }
+}
+
+/* PWA Install Prompt Enhancement */
+@media (display-mode: standalone) {
+  .hero-section {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Dark mode support (for future) */
+@media (prefers-color-scheme: dark) {
+  .landing-page {
+    background: #1a1a1a;
+  }
+
+  .benefits-section {
+    background: #0d0d0d;
+  }
+
+  .benefit-card {
+    background: #2a2a2a !important;
+    color: white;
+  }
+
+  .benefit-card .text-muted {
+    color: #aaa !important;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom button styles */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-outline-primary {
+  border: 2px solid white;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background: white;
+  color: #667eea;
+  transform: translateY(-2px);
+}
+
+/* PWA Install Button */
+.pwa-install-section {
+  display: inline-block;
+}
+
+.pwa-install-section .btn-success {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  border: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(17, 153, 142, 0.3);
+}
+
+.pwa-install-section .btn-success:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(17, 153, 142, 0.5);
+}
+
+.install-icon {
+  font-size: 1.5rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.text-white-50 {
+  opacity: 0.7;
+}
