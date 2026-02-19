@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { PublicLayout, AppLayout, AdminLayout } from './layouts'
 import { LoginPage, RegisterPage } from '../auth/pages'
-import { CustomerHomePage, NewOrderPage, MyOrdersPage, OrderDetailPage } from '../orders/pages'
+import { CustomerHomePage, NewOrderPage, MyOrdersPage, OrderDetailPage, SavedAccountsPage } from '../orders/pages'
 import { AdminHomePage, AdminOrdersPage, AdminOrderDetailPage } from '../admin/pages'
 import { RateManagementPage } from '../rates/pages'
 import { HomePage } from '../landing/pages'
@@ -56,6 +56,10 @@ export const router = createBrowserRouter([
       {
         path: 'orders/:orderId',
         element: <OrderDetailPage />,
+      },
+      {
+        path: 'saved-accounts',
+        element: <SavedAccountsPage />,
       },
     ],
   },

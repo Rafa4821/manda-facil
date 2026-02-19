@@ -1,12 +1,15 @@
-import { useState } from 'react';
-import { Card, Row, Col, Button, Badge, Form, InputGroup, Alert } from 'react-bootstrap';
+import { useState, useRef } from 'react';
+import { Card, Row, Col, Button, Badge, Form, Alert, Image, ProgressBar } from 'react-bootstrap';
 import { VenezuelanBankDetails } from '../../orders/types/order';
+import { storageService } from '../../shared/services/storageService';
 
 interface Props {
   bankDetails: VenezuelanBankDetails;
   transferReference?: string;
   transferredAt?: Date;
-  onMarkTransferred?: (reference: string) => Promise<void>;
+  vesReceiptUrl?: string;
+  orderId: string;
+  onMarkTransferred?: (reference: string, receiptUrl: string) => Promise<void>;
   showTransferControls?: boolean;
 }
 
@@ -14,12 +17,20 @@ export function BankDetailsDisplay({
   bankDetails, 
   transferReference, 
   transferredAt,
+  vesReceiptUrl,
+  orderId,
   onMarkTransferred,
   showTransferControls = false,
 }: Props) {
   const [reference, setReference] = useState(transferReference || '');
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(vesReceiptUrl || null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [copySuccess, setCopySuccess] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -47,16 +58,71 @@ ${bankDetails.email ? `Email: ${bankDetails.email}` : ''}
     await copyToClipboard(allDetails, 'todos');
   };
 
-  const handleSubmitReference = async () => {
-    if (!reference.trim() || !onMarkTransferred) return;
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = event.target.files?.[0];
+    if (!selectedFile) return;
+
+    setError('');
+
+    const validation = storageService.validateReceiptFile(selectedFile);
+    if (!validation.valid) {
+      setError(validation.error || 'Archivo no válido');
+      return;
+    }
+
+    setFile(selectedFile);
+
+    if (selectedFile.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(selectedFile);
+    }
+  };
+
+  const handleSubmitTransfer = async () => {
+    if (!reference.trim()) {
+      setError('Debes ingresar el número de referencia');
+      return;
+    }
+
+    if (!file && !vesReceiptUrl) {
+      setError('Debes subir el comprobante de transferencia VES');
+      return;
+    }
+
+    if (!onMarkTransferred) return;
 
     try {
       setSubmitting(true);
-      await onMarkTransferred(reference);
-    } catch (error) {
+      setError('');
+      
+      let receiptUrl = vesReceiptUrl || '';
+
+      // Upload receipt if new file selected
+      if (file) {
+        setUploading(true);
+        setUploadProgress(30);
+        const result = await storageService.uploadVesReceipt(orderId, file);
+        receiptUrl = result.url;
+        setUploadProgress(100);
+      }
+
+      // Mark as transferred with reference and receipt
+      await onMarkTransferred(reference, receiptUrl);
+      
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error: any) {
       console.error('Error:', error);
+      setError('Error al procesar la transferencia. Intenta nuevamente.');
     } finally {
       setSubmitting(false);
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -201,29 +267,81 @@ ${bankDetails.email ? `Email: ${bankDetails.email}` : ''}
           <>
             <hr className="my-4" />
             <div>
-              <h6 className="mb-3">Marcar como Transferido</h6>
+              <h6 className="mb-3">📤 Marcar como Transferido</h6>
+              
+              {error && (
+                <Alert variant="danger" dismissible onClose={() => setError('')} className="mb-3">
+                  {error}
+                </Alert>
+              )}
+
+              {/* Receipt Upload */}
               <Form.Group className="mb-3">
-                <Form.Label>Número de Referencia</Form.Label>
-                <InputGroup>
-                  <Form.Control
-                    type="text"
-                    placeholder="Ej: 123456789"
-                    value={reference}
-                    onChange={(e) => setReference(e.target.value)}
-                    disabled={submitting}
-                  />
-                  <Button 
-                    variant="success"
-                    onClick={handleSubmitReference}
-                    disabled={!reference.trim() || submitting}
-                  >
-                    {submitting ? 'Guardando...' : '✓ Marcar'}
-                  </Button>
-                </InputGroup>
+                <Form.Label>Comprobante de Transferencia VES *</Form.Label>
+                {preview && (
+                  <div className="mb-2">
+                    <Image 
+                      src={preview} 
+                      alt="Comprobante" 
+                      fluid 
+                      rounded 
+                      style={{ maxHeight: '150px', objectFit: 'contain', width: '100%', background: '#f8f9fa' }}
+                    />
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="form-control"
+                  accept="image/jpeg,image/jpg,image/png,application/pdf"
+                  onChange={handleFileSelect}
+                  disabled={submitting || uploading}
+                />
                 <Form.Text className="text-muted">
-                  Ingresa el número de referencia de la transferencia VES
+                  JPG, PNG o PDF • Máximo 10MB
                 </Form.Text>
               </Form.Group>
+
+              {/* Reference Number */}
+              <Form.Group className="mb-3">
+                <Form.Label>Número de Referencia *</Form.Label>
+                <Form.Control
+                  type="text"
+                  placeholder="Ej: 123456789"
+                  value={reference}
+                  onChange={(e) => setReference(e.target.value)}
+                  disabled={submitting || uploading}
+                />
+                <Form.Text className="text-muted">
+                  Número de referencia de la transferencia bancaria
+                </Form.Text>
+              </Form.Group>
+
+              {uploading && (
+                <ProgressBar 
+                  now={uploadProgress} 
+                  label={`${uploadProgress}%`} 
+                  animated 
+                  className="mb-3"
+                />
+              )}
+
+              <div className="d-grid">
+                <Button 
+                  variant="success"
+                  size="lg"
+                  onClick={handleSubmitTransfer}
+                  disabled={submitting || uploading || !reference.trim() || (!file && !vesReceiptUrl)}
+                >
+                  {submitting ? 'Procesando...' : uploading ? 'Subiendo...' : '✓ Confirmar Transferencia'}
+                </Button>
+              </div>
+
+              <Alert variant="info" className="mt-3 mb-0">
+                <small>
+                  <strong>📧 Notificación automática:</strong> El cliente recibirá un email cuando confirmes la transferencia.
+                </small>
+              </Alert>
             </div>
           </>
         )}

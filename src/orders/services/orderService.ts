@@ -226,16 +226,19 @@ export const orderService = {
     }
   },
 
-  // Mark VES transfer as completed
+  // Mark VES transfer as completed with receipt
   markVesTransferred: async (
     orderId: string,
-    transferReference: string
+    transferReference: string,
+    vesReceiptUrl: string
   ): Promise<void> => {
     try {
       const orderRef = doc(db, 'orders', orderId)
       await setDoc(orderRef, {
         vesTransferReference: transferReference,
+        vesReceiptUrl: vesReceiptUrl,
         vesTransferredAt: Timestamp.now(),
+        status: 'paid_out',
         updatedAt: Timestamp.now(),
       }, { merge: true })
     } catch (error) {

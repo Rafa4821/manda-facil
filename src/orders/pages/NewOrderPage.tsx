@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
 import { rateService } from '../../rates/services/rateService'
 import { orderService } from '../services/orderService'
+import { savedBankAccountService } from '../services/savedBankAccountService'
 import { Rate } from '../../rates/types/rate'
 import { VenezuelanBankDetails } from '../types/order'
+import { SavedBankAccount } from '../types/savedBankAccount'
 import { VenezuelanBankDetailsForm, CustomerReceiptUploader } from '../components'
 import { AdminBankDetailsCard } from '../../shared/components/AdminBankDetailsCard'
 import {
@@ -35,10 +37,19 @@ export function NewOrderPage() {
   })
   const [bankDetailsErrors, setBankDetailsErrors] = useState<Partial<Record<keyof VenezuelanBankDetails, string>>>({})
   const [clpReceiptUrl, setClpReceiptUrl] = useState('')
+  
+  // Saved accounts
+  const [savedAccounts, setSavedAccounts] = useState<SavedBankAccount[]>([])
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('')
+  const [saveThisAccount, setSaveThisAccount] = useState(false)
+  const [accountAlias, setAccountAlias] = useState('')
 
   useEffect(() => {
     loadRate()
-  }, [])
+    if (user) {
+      loadSavedAccounts()
+    }
+  }, [user])
 
   const loadRate = async () => {
     try {
@@ -51,6 +62,47 @@ export function NewOrderPage() {
       setError('Error al cargar la tasa de cambio')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadSavedAccounts = async () => {
+    if (!user) return
+    try {
+      const accounts = await savedBankAccountService.getUserSavedAccounts(user.uid)
+      setSavedAccounts(accounts)
+    } catch (error) {
+      console.error('Error loading saved accounts:', error)
+    }
+  }
+
+  const handleSelectSavedAccount = (accountId: string) => {
+    setSelectedAccountId(accountId)
+    if (!accountId) {
+      // Clear selection
+      setBankDetails({
+        beneficiaryName: '',
+        beneficiaryId: '',
+        bank: '',
+        accountType: 'ahorro',
+        accountNumber: '',
+        phone: '',
+        email: '',
+      })
+      return
+    }
+
+    const account = savedAccounts.find(acc => acc.id === accountId)
+    if (account) {
+      setBankDetails({
+        beneficiaryName: account.beneficiaryName,
+        beneficiaryId: account.beneficiaryId,
+        bank: account.bank,
+        accountType: account.accountType,
+        accountNumber: account.accountNumber,
+        phone: account.phone,
+        email: account.email || '',
+      })
+      setSaveThisAccount(false) // Ya está guardada
     }
   }
 
@@ -126,6 +178,7 @@ export function NewOrderPage() {
       setError('')
       setSubmitting(true)
       
+      // Crear el pedido
       await orderService.createOrder(
         user.uid,
         userProfile.fullName,
@@ -136,6 +189,35 @@ export function NewOrderPage() {
           clpReceiptUrl: clpReceiptUrl || undefined,
         }
       )
+
+      // Guardar la cuenta si el usuario lo solicitó
+      if (saveThisAccount && !selectedAccountId) {
+        try {
+          const alias = accountAlias.trim() || `${bankDetails.bank} - ${bankDetails.accountNumber.slice(-4)}`
+          await savedBankAccountService.createSavedAccount(user.uid, {
+            alias,
+            beneficiaryName: bankDetails.beneficiaryName,
+            beneficiaryId: bankDetails.beneficiaryId,
+            bank: bankDetails.bank,
+            accountType: bankDetails.accountType,
+            accountNumber: bankDetails.accountNumber,
+            phone: bankDetails.phone,
+            email: bankDetails.email,
+          })
+        } catch (err) {
+          console.error('Error saving account:', err)
+          // No bloquear el flujo si falla guardar la cuenta
+        }
+      }
+
+      // Marcar cuenta como usada si se seleccionó una guardada
+      if (selectedAccountId) {
+        try {
+          await savedBankAccountService.markAccountAsUsed(user.uid, selectedAccountId)
+        } catch (err) {
+          console.error('Error marking account as used:', err)
+        }
+      }
       
       navigate('/app/orders', { 
         state: { message: 'Pedido creado exitosamente' } 
@@ -225,11 +307,75 @@ export function NewOrderPage() {
 
                 <hr className="my-4" />
 
+                <h5 className="mb-3">🏦 Datos Bancarios en Venezuela</h5>
+
+                {/* Saved Accounts Selector */}
+                {savedAccounts.length > 0 && (
+                  <Form.Group className="mb-4">
+                    <Form.Label className="d-flex justify-content-between align-items-center">
+                      <span>Cuentas Guardadas</span>
+                      <Button 
+                        variant="link" 
+                        size="sm" 
+                        onClick={() => navigate('/app/saved-accounts')}
+                        className="text-decoration-none"
+                      >
+                        Gestionar cuentas →
+                      </Button>
+                    </Form.Label>
+                    <Form.Select
+                      value={selectedAccountId}
+                      onChange={(e) => handleSelectSavedAccount(e.target.value)}
+                      disabled={submitting}
+                    >
+                      <option value="">Nueva cuenta...</option>
+                      {savedAccounts.map(account => (
+                        <option key={account.id} value={account.id}>
+                          {account.alias} - {account.bank} ({account.accountNumber.slice(-4)})
+                          {account.useCount > 0 && ` - Usada ${account.useCount} ${account.useCount === 1 ? 'vez' : 'veces'}`}
+                        </option>
+                      ))}
+                    </Form.Select>
+                    <Form.Text className="text-muted">
+                      Selecciona una cuenta guardada para auto-rellenar los datos
+                    </Form.Text>
+                  </Form.Group>
+                )}
+
                 <VenezuelanBankDetailsForm
                   bankDetails={bankDetails}
                   onChange={setBankDetails}
                   errors={bankDetailsErrors}
                 />
+
+                {/* Save Account Checkbox */}
+                {!selectedAccountId && (
+                  <div className="mt-3 p-3 bg-light rounded">
+                    <Form.Check
+                      type="checkbox"
+                      id="save-account"
+                      label="💾 Guardar esta cuenta para futuros pedidos"
+                      checked={saveThisAccount}
+                      onChange={(e) => setSaveThisAccount(e.target.checked)}
+                      disabled={submitting}
+                    />
+                    {saveThisAccount && (
+                      <Form.Group className="mt-3">
+                        <Form.Label>Nombre para identificar esta cuenta (opcional)</Form.Label>
+                        <Form.Control
+                          type="text"
+                          placeholder="Ej: Mi cuenta principal, Cuenta de mamá..."
+                          value={accountAlias}
+                          onChange={(e) => setAccountAlias(e.target.value)}
+                          disabled={submitting}
+                        />
+                        <Form.Text className="text-muted">
+                          Si no especificas un nombre, se usará: {bankDetails.bank} - {bankDetails.accountNumber.slice(-4)}
+                        </Form.Text>
+                      </Form.Group>
+                    )}
+                  </div>
+                )}
 
                 <hr className="my-4" />
 

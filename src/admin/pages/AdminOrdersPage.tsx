@@ -345,7 +345,7 @@ export function AdminOrdersPage() {
                       </td>
                       <td onClick={(e) => e.stopPropagation()}>
                         <Button 
-                          variant="outline-primary" 
+                          variant="primary" 
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation()
@@ -426,9 +426,10 @@ export function AdminOrdersPage() {
 
                     <div className="order-card-footer">
                       <Button 
-                        variant="outline-primary" 
+                        variant="primary" 
                         size="sm"
                         onClick={() => navigate(`/admin/orders/${order.id}`)}
+                        className="w-100"
                       >
                         Ver Detalle →
                       </Button>

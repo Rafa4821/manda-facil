@@ -74,7 +74,7 @@ export function CustomerHomePage() {
       
       <h3 className="mb-4">Bienvenido a Mandafácil</h3>
       <Row className="g-4">
-        <Col md={6}>
+        <Col md={6} lg={4}>
           <Card className="shadow-sm h-100">
             <Card.Body>
               <Card.Title>Nuevo Pedido</Card.Title>
@@ -87,15 +87,28 @@ export function CustomerHomePage() {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={6}>
+        <Col md={6} lg={4}>
           <Card className="shadow-sm h-100">
             <Card.Body>
               <Card.Title>Mis Pedidos</Card.Title>
               <Card.Text>
                 Consulta el estado de tus remesas
               </Card.Text>
-              <Button variant="outline-primary" onClick={() => navigate('/app/orders')}>
+              <Button variant="primary" onClick={() => navigate('/app/orders')}>
                 Ver Pedidos
+              </Button>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={6} lg={4}>
+          <Card className="shadow-sm h-100">
+            <Card.Body>
+              <Card.Title>Cuentas Guardadas</Card.Title>
+              <Card.Text>
+                Gestiona tus cuentas bancarias guardadas
+              </Card.Text>
+              <Button variant="outline-primary" onClick={() => navigate('/app/saved-accounts')}>
+                Ver Cuentas
               </Button>
             </Card.Body>
           </Card>

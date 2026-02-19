@@ -1,0 +1,115 @@
+/* Admin Order Detail Page - Mobile Responsive Styles */
+
+/* Print styles */
+@media print {
+  .no-print,
+  .btn,
+  button,
+  .dropdown {
+    display: none !important;
+  }
+  
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  /* Stack action buttons on mobile */
+  .btn-group {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .btn-group .btn {
+    border-radius: 0.375rem !important;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* Better spacing for cards on mobile */
+  .card {
+    margin-bottom: 1rem;
+  }
+  
+  /* Adjust image preview sizes */
+  .card-body img {
+    max-height: 200px !important;
+  }
+  
+  /* Better touch targets */
+  .btn {
+    min-height: 44px;
+  }
+  
+  /* Adjust badge sizes */
+  .badge.fs-6 {
+    font-size: 0.875rem !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 769px) and (max-width: 991px) {
+  .card-body img {
+    max-height: 250px !important;
+  }
+}
+
+/* Improve text readability on small screens */
+@media (max-width: 576px) {
+  h2 {
+    font-size: 1.5rem;
+  }
+  
+  h5 {
+    font-size: 1.1rem;
+  }
+  
+  h6 {
+    font-size: 1rem;
+  }
+  
+  /* Better spacing for transaction cards */
+  .bg-light .card-body h4 {
+    font-size: 1.25rem;
+  }
+}
+
+/* Sticky header on scroll (desktop) */
+@media (min-width: 992px) {
+  .admin-order-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 100;
+    padding: 1rem 0;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+}
+
+/* Warning border animation for action required */
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: #ffc107;
+  }
+  50% {
+    border-color: #ff9800;
+  }
+}
+
+.border-warning[style*="borderWidth"] {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+/* Improve contrast for accessibility */
+.bg-warning .text-dark {
+  color: #212529 !important;
+}
+
+/* Better image loading states */
+.card-body img {
+  background: #f8f9fa;
+  min-height: 100px;
+}

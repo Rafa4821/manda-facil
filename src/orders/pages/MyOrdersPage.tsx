@@ -231,12 +231,13 @@ export function MyOrdersPage() {
 
                 <div className="order-card-footer">
                   <Button 
-                    variant="outline-primary" 
+                    variant="primary" 
                     size="sm"
                     onClick={(e) => {
                       e.stopPropagation()
                       navigate(`/app/orders/${order.id}`)
                     }}
+                    className="w-100"
                   >
                     Ver Detalle →
                   </Button>

@@ -1,10 +1,12 @@
-import { Navbar as BSNavbar, Container, Nav, Button } from 'react-bootstrap'
+import { Navbar as BSNavbar, Container, Nav, Button, Badge } from 'react-bootstrap'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/context/AuthContext'
+import { usePendingOrders } from '../../admin/hooks/usePendingOrders'
 
 export function Navbar() {
   const { logout, user, userProfile } = useAuth()
   const navigate = useNavigate()
+  const { pendingCount } = usePendingOrders()
 
   const handleLogout = async () => {
     try {
@@ -34,7 +36,19 @@ export function Navbar() {
             {isAdmin ? (
               <>
                 <Nav.Link as={Link} to="/admin">Dashboard</Nav.Link>
-                <Nav.Link as={Link} to="/admin/orders">Pedidos</Nav.Link>
+                <Nav.Link as={Link} to="/admin/orders" className="position-relative">
+                  Pedidos
+                  {pendingCount > 0 && (
+                    <Badge 
+                      bg="danger" 
+                      pill 
+                      className="position-absolute top-0 start-100 translate-middle"
+                      style={{ fontSize: '0.65rem' }}
+                    >
+                      {pendingCount > 99 ? '99+' : pendingCount}
+                    </Badge>
+                  )}
+                </Nav.Link>
                 <Nav.Link as={Link} to="/admin/rate">Tasa</Nav.Link>
               </>
             ) : (
